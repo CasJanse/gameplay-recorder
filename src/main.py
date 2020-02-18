@@ -1,9 +1,11 @@
 from InputListener import InputListener
-from ScreenRecorder import ScreenRecorder
+# from ScreenRecorder import ScreenRecorder
 import win32gui
 import time
 import cv2
 import keyboard
+import numpy as np
+from PIL import ImageGrab
 
 fps = 30
 
@@ -24,52 +26,38 @@ def start_recording():
     total_frames = []
     total_input = []
 
-    # Keep recording until the loop is broken by pressing q
+    # Keep recording until the loop is broken by pressing esc
     while True:
-        # Break the loop when done
-        if keyboard.is_pressed('q'):
-            write_video_file(total_frames)
-            break
+        img = ImageGrab.grab(bbox=window)
+        img_np = np.array(img)
 
-        # Take a screenshot
-        time.sleep(1 / fps)
-        frames.append(screen_recorder.take_screenshot())
+        frame = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
+        out.write(frame)
 
         # Get the input and save the frame every half second
         if len(frames) >= fps / 2:
             player_input = input_listener.get_keys_pressed_down()
             input_listener.clear_key_list()
 
-            total_frames.append(frames)
-            total_input.append(player_input)
-
             frames = []
             player_input = []
 
-
-# Takes all the separate frames and writes them to a video file
-def write_video_file(total_frames):
-    out = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc(*'DIVX'), fps, (window[2] - window[0], window[3] - window[1]))
-
-    # Loop through the list to get to each frame and add is to the VideoWriter
-    for i in range(len(total_frames)):
-        for j in range(len(total_frames[i])):
-            for k in range(len(total_frames[i][j])):
-                # writing to a image array
-                print(total_frames[i][j][k])
-                print("---------------")
-                out.write(total_frames[i][j][k])
+        if keyboard.is_pressed('q'):
+            break
     out.release()
 
+
 # Wait a few seconds in order to focus on the correct window
-time.sleep(1)
+time.sleep(3)
 window = get_window_position()
 print(window)
 
 
 # Set the input listener and screen recorder
 input_listener = InputListener()
-screen_recorder = ScreenRecorder(window)
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+out = cv2.VideoWriter("../video/output.avi", fourcc, 30, (window[2] - window[0], window[3] - window[1]))
+# screen_recorder = ScreenRecorder(window)
 
 start_recording()
 
