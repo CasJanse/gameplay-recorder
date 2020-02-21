@@ -1,49 +1,26 @@
-import mss
-import mss.tools
-import numpy as np
 import cv2
+import numpy as np
+import pyautogui
 import time
-import random
-from PIL import Image
 
-# Takes a screenshot of the currently selected window
-class ScreenRecorder:
-    def __init__(self, window):
-        self.x = window[0]
-        self.y = window[1]
-        self.width = window[2]
-        self.height = window[3]
+start_time = time.time()
+second = 1
+frame_amount = 0
+frame_timestamp = time.time()
+fps = 20
 
-        self.monitor = {}
-        self.image_size = {}
+while True:
+    if time.time() - frame_timestamp >= 1 / fps or frame_amount == 0:
+        frame_timestamp = time.time()
+        img = pyautogui.screenshot()
+        frame = np.array(img)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        self.key_index = 0
-        self.resize_scale = 4
+        # cv2.imshow("Screen", frame)
+        frame_amount += 1
 
-        self.set_coordinates(self.x, self.y, self.width, self.height)
-        self.image_width = int(self.width / self.resize_scale)
-        self.image_height = int(self.height / self.resize_scale)
-        self.image_size = self.image_width * self.image_height
-        pass
+        if time.time() - start_time > 1:
+            break
 
-    # Take a screenshot
-    # @return sct_img: An array containing the pixel values of the screenshot
-    def take_screenshot(self):
-        with mss.mss() as sct:
-            sct_img = np.array(sct.grab(self.monitor))
-        return sct_img
-
-    # Set the necessary values for the monitoring area
-    def set_coordinates(self, x, y, width, height):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.monitor = {"left": x, "top": y, "width": width, "height": height}
-        self.image_size = {"x": int(width / self.resize_scale), "y": int(height / self.resize_scale)}
-
-    # Get the size of the current image
-    # @return image_size: A tuple containing the width and height of the current monitor area
-    def get_image_size(self):
-        return self.image_size
-
+print(frame_amount)
+# cv2.destroyAllWindows()
