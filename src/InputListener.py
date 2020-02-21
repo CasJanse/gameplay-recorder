@@ -38,4 +38,4 @@ class InputListener:
     # Add a listener to a specific keyboard key
     def add_key_events(self, key):
         keyboard.on_press_key(key, lambda _: self.add_key_to_list(key))
-        # keyboard.on_release_key(key, lambda _: self.remove_key_from_list(key))
+        keyboard.on_release_key(key, lambda _: self.remove_key_from_list(key))

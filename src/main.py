@@ -1,12 +1,14 @@
 from InputListener import InputListener
-from ScreenRecorder import ScreenRecorder
+# from ScreenRecorder import ScreenRecorder
 import win32gui
-import time
 import cv2
-import keyboard
+import numpy as np
+import pyautogui
+import time
+import copy
 
-fps = 30
 
+fps = 15
 
 # Get the position of the window currently in focus
 # @return window_rect: A tuple containing the x, y, width and height of the window
@@ -19,57 +21,50 @@ def get_window_position():
 
 # Starts recording the screen and keyboard inputs
 def start_recording():
-    frames = []
-    player_input = []
-    total_frames = []
-    total_input = []
+    start_time = time.time()
+    frame_amount = 0
+    frame_timestamp = time.time()
 
-    # Keep recording until the loop is broken by pressing q
+    inputs = []
+
+    # Keep recording until the loop is broken
     while True:
-        # Break the loop when done
-        if keyboard.is_pressed('q'):
-            write_video_file(total_frames)
-            break
+        # Record a frame whenever enough time has passed since the previous frame
+        if time.time() - frame_timestamp >= 1 / fps or frame_amount == 0:
+            # Take the screenshot
+            frame_timestamp = time.time()
+            img = pyautogui.screenshot(region=(window[0], window[1], window[2] - window[0], window[3] - window[1]))
+            frame = np.array(img)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        # Take a screenshot
-        time.sleep(1 / fps)
-        frames.append(screen_recorder.take_screenshot())
+            # Show the recording in a separate screen if needed (disabled for performance optimisation)
+            # cv2.imshow("Screen", frame)
 
-        # Get the input and save the frame every half second
-        if len(frames) >= fps / 2:
-            player_input = input_listener.get_keys_pressed_down()
-            input_listener.clear_key_list()
+            frame_amount += 1
+            out.write(frame)
 
-            total_frames.append(frames)
-            total_input.append(player_input)
+            # Get the keys that are currently held down
+            input = copy.copy(input_listener.get_keys_pressed_down())
+            inputs.append(input)
 
-            frames = []
-            player_input = []
-
-
-# Takes all the separate frames and writes them to a video file
-def write_video_file(total_frames):
-    out = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc(*'DIVX'), fps, (window[2] - window[0], window[3] - window[1]))
-
-    # Loop through the list to get to each frame and add is to the VideoWriter
-    for i in range(len(total_frames)):
-        for j in range(len(total_frames[i])):
-            for k in range(len(total_frames[i][j])):
-                # writing to a image array
-                print(total_frames[i][j][k])
-                print("---------------")
-                out.write(total_frames[i][j][k])
-    out.release()
+            # Stop the recording after x seconds
+            # TODO: Change break to a key instead of timer
+            if time.time() - start_time > 10:
+                out.release()
+                break
 
 # Wait a few seconds in order to focus on the correct window
 time.sleep(1)
 window = get_window_position()
 print(window)
 
+# Setup for the video capturing and writing
+cap = cv2.VideoCapture(0)
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+out = cv2.VideoWriter("../video/output.avi", fourcc, fps, (window[2] - window[0], window[3] - window[1]))
 
-# Set the input listener and screen recorder
+# Set the input listener
 input_listener = InputListener()
-screen_recorder = ScreenRecorder(window)
 
 start_recording()
 
