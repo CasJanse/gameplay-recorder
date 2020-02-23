@@ -6,7 +6,7 @@ import numpy as np
 import pyautogui
 import time
 import copy
-
+import csv
 
 fps = 15
 
@@ -25,7 +25,7 @@ def start_recording():
     frame_amount = 0
     frame_timestamp = time.time()
 
-    inputs = []
+    input_list = []
 
     # Keep recording until the loop is broken
     while True:
@@ -45,13 +45,21 @@ def start_recording():
 
             # Get the keys that are currently held down
             input = copy.copy(input_listener.get_keys_pressed_down())
-            inputs.append(input)
+            input_list.append(input)
 
             # Stop the recording after x seconds
             # TODO: Change break to a key instead of timer
             if time.time() - start_time > 10:
                 out.release()
+                save_inputs_to_file(input_list)
                 break
+
+
+def save_inputs_to_file(input_list):
+    with open("../input/inputs.csv", "w+") as result_file:
+        writer = csv.writer(result_file, dialect="excel")
+        writer.writerows(input_list)
+
 
 # Wait a few seconds in order to focus on the correct window
 time.sleep(1)
