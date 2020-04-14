@@ -15,6 +15,9 @@ class InputListener:
         self.add_key_events("left")
         self.add_key_events("right")
         self.add_key_events("space")
+        self.add_key_events("q")
+        self.add_key_events("z")
+        self.add_key_events("x")
 
     # Add a key to the list of pressed keys if not already present
     def add_key_to_list(self, key):
